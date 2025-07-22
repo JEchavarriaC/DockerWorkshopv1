@@ -1,0 +1,73 @@
+services:
+  mongodb:
+    image: mongo-db-image:v1
+    container_name: mongodb
+    build:
+      context: .
+      dockerfile: Dockerfile.mongo-final
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/home/mongodb/data
+      - ./certs:/home/mongodb/certs:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo_root_pass
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    secrets:
+      - mongo_root_pass
+    networks:
+      - my-app-network
+    restart: on-failure
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+      - CHOWN
+      - SETUID
+      - SETGID
+
+  test-app:
+    image: openliberty-ms:v1
+    container_name: openliberty-ms
+    build:
+      context: .
+      dockerfile: Dockerfile.ms
+      target: prod
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_HOSTNAME: ${MONGO_HOSTNAME}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_DBNAME: ${MONGO_DBNAME}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASS_FILE: /run/secrets/mongo_db_pass
+    secrets:
+      - mongo_db_pass
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./ol_logs:/logs
+    networks:
+      - my-app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/mongo/"]
+      interval: 10s
+      retries: 1
+    restart: on-failure
+    cap_drop:
+      - ALL
+
+volumes:
+  mongo_data:
+  ol_logs:
+
+secrets:
+  mongo_root_pass:
+    file: ./secrets/mongo-root-pass.txt
+  mongo_db_pass:
+    file: ./secrets/mongo-db-pass.txt
+
+networks:
+  my-app-network:
+    driver: bridge

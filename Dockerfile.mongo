@@ -1,0 +1,30 @@
+FROM mongo:latest
+
+# Crear directorios para MongoDB
+RUN mkdir -p /home/mongodb/data \
+    && mkdir -p /home/mongodb/certs \
+    && mkdir -p /home/mongodb/logs \
+    && chown -R mongodb:mongodb /home/mongodb
+
+# Certificados para comunicacion ssl
+COPY certs/ /home/mongodb/certs/
+
+# Archivos de configuración e inicialización.
+COPY mongo-config/mongodb.conf /home/mongodb/
+COPY mongo-config/index.js /home/mongodb/
+
+# Inicializacion de la base de datos
+RUN mongod \
+        --fork \
+        --config /home/mongodb/mongodb.conf \
+    && mongosh \
+        testdb \
+        --tls \
+        --tlsCAFile /home/mongodb/certs/cert.pem \
+        --tlsCertificateKeyFile /home/mongodb/certs/mongodb_tls.pem \
+        --host localhost \
+        /home/mongodb/index.js \
+    && mongod --dbpath /home/mongodb/data --shutdown \
+    && chown -R mongodb /home/mongodb
+
+CMD ["mongod", "--config", "/home/mongodb/mongodb.conf"]

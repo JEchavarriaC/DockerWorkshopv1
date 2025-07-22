@@ -1,0 +1,7 @@
+# Como base se toma una imagen de Open Liberty que sea ligera.
+FROM open-liberty:kernel-slim-java17-openj9
+
+# Copiar configuracion de Open Liberty.
+ADD server.tar.gz /opt/ol/wlp/usr/servers/defaultServer/
+
+CMD ["server", "run", "defaultServer"]

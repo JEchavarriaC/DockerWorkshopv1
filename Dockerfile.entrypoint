@@ -1,0 +1,5 @@
+# Como base se toma una imagen de Open Liberty que sea ligera.
+FROM open-liberty:kernel-slim-java17-openj9
+
+# Se define el comando de inicio de Open Liberty con CMD
+ENTRYPOINT ["server", "run", "defaultServer"]

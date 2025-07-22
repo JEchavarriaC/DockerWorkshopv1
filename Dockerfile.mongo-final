@@ -1,0 +1,18 @@
+FROM mongo:8.0.12-rc0-noble
+
+# Crear directorios para mongodb
+RUN mkdir -p /home/mongodb/data \
+    && mkdir -p /home/mongodb/certs \
+    && mkdir -p /home/mongodb/logs \
+    && chown -R mongodb:mongodb /home/mongodb
+
+# Copiado de certificados
+COPY certs/ /home/mongodb/certs/
+
+# Copiar archivos de configuración e inicialización a los directorios correctos
+COPY mongo-config/mongodb.conf /home/mongodb/
+COPY mongo-config/index.js /docker-entrypoint-initdb.d/index.js
+
+EXPOSE 27017
+
+CMD ["mongod", "--config", "/home/mongodb/mongodb.conf"]
