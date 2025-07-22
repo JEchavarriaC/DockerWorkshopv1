@@ -19,13 +19,6 @@ services:
     networks:
       - my-app-network
     restart: on-failure
-    cap_drop:
-      - ALL
-    cap_add:
-      - DAC_OVERRIDE
-      - CHOWN
-      - SETUID
-      - SETGID
 
   test-app:
     image: openliberty-ms:v1
@@ -55,8 +48,6 @@ services:
       interval: 10s
       retries: 1
     restart: on-failure
-    cap_drop:
-      - ALL
 
 volumes:
   mongo_data:
